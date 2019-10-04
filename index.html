@@ -96,7 +96,7 @@
       var scene, camera, light, renderer;
       var geometry, geometry2, originGeometry, cube, mesh, material;
       var roomMesh;
-      var projector = new Projector();
+      var projector = new THREE.Projector();
 
       var data, texture, points;
       var transformFeedback;
@@ -164,11 +164,7 @@
       }
 
       function inAR() {
-        if (!('getSession' in renderer.vr)) {
-          return false;
-        }
-        let session = renderer.vr.getSession();
-        return session && session.environmentBlendMode && session.environmentBlendMode != 'opaque';
+        return true;
       }
 
       function init() {
@@ -256,22 +252,26 @@
         roomMesh.position.y = roomSize.y/2;
         scene.add( roomMesh );
 
-        renderer.vr.addEventListener('sessionstart', (ev) => {
-          // Hide the room mesh if we're in an AR device.
-          if (inAR()) {
-            roomMesh.visible = false;
-            controllerMesh1.visible = false;
-            controllerMesh2.visible = false;
-          } else {
-            controllerMesh1.visible = true;
-            controllerMesh2.visible = true;
-          }
-        });
-        renderer.vr.addEventListener('sessionend', (ev) => {
-          roomMesh.visible = true;
+          roomMesh.visible = false;
           controllerMesh1.visible = false;
           controllerMesh2.visible = false;
-        });
+
+        // renderer.vr.addEventListener('sessionstart', (ev) => {
+        //   // Hide the room mesh if we're in an AR device.
+        //   if (inAR()) {
+        //     roomMesh.visible = false;
+        //     controllerMesh1.visible = false;
+        //     controllerMesh2.visible = false;
+        //   } else {
+        //     controllerMesh1.visible = true;
+        //     controllerMesh2.visible = true;
+        //   }
+        // });
+        // renderer.vr.addEventListener('sessionend', (ev) => {
+        //   roomMesh.visible = true;
+        //   controllerMesh1.visible = false;
+        //   controllerMesh2.visible = false;
+        // });
 
         if (isWebGL2) {
           // Start Creation of DataTexture
@@ -298,7 +298,7 @@
             // THREE.js BUG FIX
             particleCount = Math.floor(particleCount / 3) * 3;
 
-            points = GeometryUtils.randomPointsInGeometry( textGeo, particleCount );
+            points = THREE.GeometryUtils.randomPointsInGeometry( textGeo, particleCount );
 
             data = new Float32Array( particleCount * 4 );
             for ( var i = 0, j = 0, l = data.length; i < l; i += 4, j += 1 ) {
