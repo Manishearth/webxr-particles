@@ -35,7 +35,13 @@
   <body>
 
     <!-- For Magic Leap Support -->
-    <script src="js/three/examples/jsm/vr/HelioWebXRPolyfill.js"></script>
+
+    <script src="./js/three/build/three.js"></script>
+    <script src="./js/SimulationShader.js"></script>
+
+    <script src="./js/three/examples/js/renderers/Projector.js"></script>
+    <script src="./js/three/examples/js/utils/GeometryUtils.js"></script>
+    <script src="./js/three/examples/js/vr/WebVR.js"></script>
 
     <!-- WebGL 2 shaders -->
     <script id="vs-particles-2" type="x-shader/x-vertex">
@@ -59,13 +65,8 @@
       }
     </script>
 
-    <script type="module">
+    <script>
 
-      import * as THREE from './js/three/build/three.module.js';
-      import { SimulationShader } from './js/SimulationShader.js';
-      import { Projector } from './js/three/examples/jsm/renderers/Projector.js';
-      import { GeometryUtils } from './js/three/examples/jsm/utils/GeometryUtils.js';
-      import { WEBVR } from './js/three/examples/jsm/vr/WebVR.js';
 
       function getQueryString(name, defaultValue) {
         var query = window.location.search.substring(1);

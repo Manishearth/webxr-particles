@@ -232,5 +232,3 @@ let SimulationShader = function (renderer, maxColliders) {
   }
 
 };
-
-export { SimulationShader };
