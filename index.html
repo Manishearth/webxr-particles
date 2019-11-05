@@ -252,9 +252,9 @@
         roomMesh.position.y = roomSize.y/2;
         scene.add( roomMesh );
 
-          roomMesh.visible = false;
-          controllerMesh1.visible = false;
-          controllerMesh2.visible = false;
+          roomMesh.visible = true;
+          controllerMesh1.visible = true;
+          controllerMesh2.visible = true;
 
         // renderer.vr.addEventListener('sessionstart', (ev) => {
         //   // Hide the room mesh if we're in an AR device.
@@ -492,7 +492,7 @@
         var targetRandomSeedAttrib = target.attributes['randomSeed'];
 
         function getWebGLBuffer(attribute) {
-          let webglBuffer = renderer.attributes.get(attribute);
+          let webglBuffer = renderer.properties.get(attribute);
           if (webglBuffer) {
             return webglBuffer.buffer;
           }
