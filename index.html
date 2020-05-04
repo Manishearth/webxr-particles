@@ -300,9 +300,9 @@
 
             var velData = new Float32Array( particleCount * 4 );
             for ( var i = 0, l = velData.length; i < l; i += 4 ) {
-              velData[ i ] = (Math.random() - 0.5) * 0.004;
-              velData[ i + 1 ] = (Math.random() - 0.5) * 0.004;
-              velData[ i + 2 ] = (Math.random() - 0.5) * 0.004;
+              velData[ i ] = 0; // (Math.random() - 0.5) * 0.004;
+              velData[ i + 1 ] = 0; //(Math.random() - 0.5) * 0.004;
+              velData[ i + 2 ] = 0; //(Math.random() - 0.5) * 0.004;
               velData[ i + 3 ] = 0.0;
             }
 
@@ -445,10 +445,10 @@
         var vector = new THREE.Vector3();
         for (let joint of joints) {
           vector.setFromMatrixPosition( hand1[joint].matrixWorld );
-          pointToCollider(fi++, true, vector, hand1[joint].jointRadius * 10);
+          pointToCollider(fi++, true, vector, hand1[joint].jointRadius);
 
           vector.setFromMatrixPosition( hand2[joint].matrixWorld );
-          pointToCollider(fi++, true, vector, hand2[joint].jointRadius * 10);
+          pointToCollider(fi++, true, vector, hand2[joint].jointRadius);
         }
 
         /*var buttonPushed = false;

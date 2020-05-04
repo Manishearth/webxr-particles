@@ -79,7 +79,7 @@ let SimulationShader = function (renderer, maxColliders) {
           outVel += vec4(movement * 0.1, 0.0);
         }
         // Adding a tangential velocity looks quite pretty
-        float forceFieldDist = (colliders[i].w * 20.0 - dist);
+        float forceFieldDist = (colliders[i].w * 2.0 - dist);
         if (forceFieldDist > 0.0) {
           vec2 tangentToCollider = normalize(vec2(posToCollider.y, -posToCollider.x));
           outVel.xy += tangentToCollider * 0.0007;
@@ -123,10 +123,7 @@ let SimulationShader = function (renderer, maxColliders) {
       if ( rand() > resetRate ) {
         outPosition = vec4(origin.xyz, 0.0);
         // This velocity reset should be in sync with the initialization values in index.html
-        outVelocity = vec4((rand()-0.5) * 0.004,
-                           (rand()-0.5) * 0.004,
-                           (rand()-0.5) * 0.004,
-                           0.0);
+        outVelocity = vec4(0.0, 0.0, 0.0, 0.0);
       } else {
         runSimulation(position, velocity, outPosition, outVelocity);
       }
