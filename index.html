@@ -110,7 +110,7 @@
 
       var INT_MAX = 2147483647;
 
-      var maxColliders = 8;
+      var maxColliders = 10;
 
       var pickCoord = new THREE.Vector3(0.0, 0.0, 0.0);
       var pickRay = new THREE.Ray();
@@ -125,8 +125,7 @@
       var showColliders = false;
 
       const CONTROLLER_COLLIDER_SIZE = 0.075;
-      var controller1, controller2;
-      var controllerMesh1, controllerMesh2;
+      var hand1, hand2;
 
       var isWebGL2 = false;
 
@@ -195,14 +194,14 @@
         let btnVR = WEBVR.createButton(
             renderer, {
           mode: 'immersive-vr',
-          sessionInit: {requiredFeatures: ['local-floor']}
+          sessionInit: {requiredFeatures: ['local-floor', 'hand-tracking']}
         });
         btnVR.style.left = 'calc(50% - 110px)';
         document.body.appendChild(btnVR);
         let btnAR = WEBVR.createButton(
             renderer, {
           mode: 'immersive-ar',
-          sessionInit: {requiredFeatures: ['local-floor']}
+          sessionInit: {requiredFeatures: ['local-floor', 'hand-tracking']}
         });
         btnAR.style.left = 'calc(50% + 10px)';
         document.body.appendChild(btnAR);
@@ -215,26 +214,25 @@
         camera.lookAt( new THREE.Vector3(0, roomSize.y/2, -roomSize.z*0.25));
         scene.add( camera );
 
-        controller1 = renderer.vr.getController( 0 );
-        scene.add( controller1 );
+        // avoid an error in session events
+        var controller1 = renderer.vr.getController(0);
+        var controller2 = renderer.vr.getController(1);
+        hand1 = renderer.vr.getHand( 0 );
 
-        controller2 = renderer.vr.getController( 1 );
-        scene.add( controller2 );
+        hand2 = renderer.vr.getHand( 1 );
 
-        var controllerMaterial = new THREE.MeshPhongMaterial({ color: 0x00DD22 });
-        var controllerGeometry = new THREE.IcosahedronGeometry(CONTROLLER_COLLIDER_SIZE, 1);
-        controllerMesh1 = new THREE.Mesh(controllerGeometry, controllerMaterial);
-        controllerMesh2 = new THREE.Mesh(controllerGeometry, controllerMaterial);
-        controller1.add( controllerMesh1 );
-        controller2.add( controllerMesh2 );
-
-        var fingerMaterial = new THREE.MeshPhongMaterial({ color: 0x00DD22 });
-        var fingerGeometry = new THREE.IcosahedronGeometry(1, 2);
-        showColliders = getQueryValue('colliders', 0) != 0;
-        for (var i = 0; i < maxColliders; ++i) {
-          colliderMeshes[i] = new THREE.Mesh(fingerGeometry, fingerMaterial);
-          scene.add(colliderMeshes[i]);
+        for (let i = 0; i <= XRHand.LITTLE_PHALANX_TIP; i++) {
+          scene.add(hand1[i]);
+          scene.add(hand2[i]);
         }
+
+        // var fingerMaterial = new THREE.MeshPhongMaterial({ color: 0x00DD22 });
+        // var fingerGeometry = new THREE.IcosahedronGeometry(1, 2);
+        // showColliders = getQueryValue('colliders', 0) != 0;
+        // for (var i = 0; i < maxColliders; ++i) {
+        //   colliderMeshes[i] = new THREE.Mesh(fingerGeometry, fingerMaterial);
+        //   scene.add(colliderMeshes[i]);
+        // }
 
         var textureLoader = new THREE.TextureLoader();
         var backImage = textureLoader.load("media/textures/Back.png");
@@ -259,17 +257,10 @@
           // Hide the room mesh if we're in an AR device.
           if (inAR()) {
             roomMesh.visible = false;
-            controllerMesh1.visible = false;
-            controllerMesh2.visible = false;
-          } else {
-            controllerMesh1.visible = true;
-            controllerMesh2.visible = true;
           }
         });
         renderer.vr.addEventListener('sessionend', (ev) => {
           roomMesh.visible = true;
-          controllerMesh1.visible = false;
-          controllerMesh2.visible = false;
         });
 
         if (isWebGL2) {
@@ -428,17 +419,18 @@
         }
         colliders[o+3] = active ? (size / textScale) : -1;
 
-        colliderMeshes[index].visible = active && showColliders;
-        if (active) {
-          colliderMeshes[index].position.x = vector.x;
-          colliderMeshes[index].position.y = vector.y;
-          colliderMeshes[index].position.z = vector.z;
-          colliderMeshes[index].scale.set(size, size, size);
-        }
+        // colliderMeshes[index].visible = active && showColliders;
+        // if (active) {
+        //   colliderMeshes[index].position.x = vector.x;
+        //   colliderMeshes[index].position.y = vector.y;
+        //   colliderMeshes[index].position.z = vector.z;
+        //   colliderMeshes[index].scale.set(size, size, size);
+        // }
       }
 
       function updateColliders() {
         var fi = 0;
+        const joints = [XRHand.THUMB_PHALANX_TIP, XRHand.INDEX_PHALANX_TIP, XRHand.MIDDLE_PHALANX_TIP, XRHand.RING_PHALANX_TIP, XRHand.LITTLE_PHALANX_TIP];
 
         while (mouseCoordQueue.length) {
           pointToCollider(fi, true, mouseCoordQueue.shift(), 0.05);
@@ -451,11 +443,13 @@
         }
 
         var vector = new THREE.Vector3();
-        vector.setFromMatrixPosition( controller1.matrixWorld );
-        pointToCollider(fi++, true, vector, CONTROLLER_COLLIDER_SIZE);
+        for (let joint of joints) {
+          vector.setFromMatrixPosition( hand1[joint].matrixWorld );
+          pointToCollider(fi++, true, vector, hand1[joint].jointRadius * 10);
 
-        vector.setFromMatrixPosition( controller2.matrixWorld );
-        pointToCollider(fi++, true, vector, CONTROLLER_COLLIDER_SIZE);
+          vector.setFromMatrixPosition( hand2[joint].matrixWorld );
+          pointToCollider(fi++, true, vector, hand2[joint].jointRadius * 10);
+        }
 
         /*var buttonPushed = false;
         var gamepads = navigator.getGamepads();

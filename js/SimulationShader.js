@@ -79,7 +79,7 @@ let SimulationShader = function (renderer, maxColliders) {
           outVel += vec4(movement * 0.1, 0.0);
         }
         // Adding a tangential velocity looks quite pretty
-        float forceFieldDist = (colliders[i].w * 2.0 - dist);
+        float forceFieldDist = (colliders[i].w * 20.0 - dist);
         if (forceFieldDist > 0.0) {
           vec2 tangentToCollider = normalize(vec2(posToCollider.y, -posToCollider.x));
           outVel.xy += tangentToCollider * 0.0007;
