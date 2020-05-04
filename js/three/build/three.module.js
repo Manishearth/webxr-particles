@@ -23237,6 +23237,34 @@ function WebXRManager( renderer, gl ) {
 
 	};
 
+	this.getHand = function ( id ) {
+
+		var controller = controllers[ id ];
+
+		if ( controller === undefined ) {
+
+			controller = {};
+			controllers[ id ] = controller;
+
+		}
+
+		if ( controller.hand === undefined ) {
+
+			controller.hand = [];
+
+			controller.hand.matrixAutoUpdate = false;
+			controller.hand.visible = false;
+			for (let i = 0; i <= XRHand.LITTLE_PHALANX_TIP; i++) {
+				controller.hand[i] = new Group();
+				controller.hand[i].matrixAutoUpdate = false;
+				controller.hand[i].visible = false;
+			}
+		}
+
+		return controller.hand;
+
+	};
+
 	//
 
 	function onSessionEvent( event ) {
@@ -23446,6 +23474,21 @@ function WebXRManager( renderer, gl ) {
 			var inputSource = sortedInputSources[ i ];
 
 			if ( inputSource ) {
+
+				if (controller.hand && inputSource.hand) {
+					for (let i = 0; i <= XRHand.LITTLE_PHALANX_TIP; i++) {
+						if (inputSource.hand[i]) {
+							let jointPose = frame.getJointPose(inputSource.hand[i], referenceSpace);
+							if (jointPose !== null) {
+								controller.hand[i].matrix.fromArray( jointPose.transform.matrix );
+								controller.hand[i].matrix.decompose( controller.hand[i].position, controller.hand[i].rotation, controller.hand[i].scale );
+								controller.hand[i].jointRadius = jointPose.radius;
+							}
+
+							controller.hand[i].visible = jointPose !== null;
+						}
+					}
+				}
 
 				var inputPose = frame.getPose( inputSource.targetRaySpace, referenceSpace );
 
