@@ -46,7 +46,8 @@ let SimulationShader = function (renderer, maxColliders) {
 
     uniform float time;
     uniform float timeDelta;
-    uniform vec4 colliders[${maxColliders}];
+    uniform vec4 colliderBases[${maxColliders}];
+    uniform vec4 colliderTips[${maxColliders}];
 
     highp uint curRandomSeed;
 
@@ -57,6 +58,7 @@ let SimulationShader = function (renderer, maxColliders) {
     }
 
     void runSimulation(vec4 pos, vec4 vel, out vec4 outPos, out vec4 outVel) {
+      int collided = 0;
       outPos.x = pos.x + vel.x;
       outPos.y = pos.y + vel.y;
       outPos.z = pos.z + vel.z;
@@ -70,19 +72,57 @@ let SimulationShader = function (renderer, maxColliders) {
 
       // Interaction with fingertips
       for (int i = 0; i < ${maxColliders}; ++i) {
-        vec3 posToCollider = pos.xyz - colliders[i].xyz;
-        float dist = length(posToCollider);
-        if (dist < colliders[i].w) {
-          vec3 movement = normalize(posToCollider) * colliders[i].w;
-          outPos += vec4(movement, 0.0);
-          outPos.w = 1.0; // Indicates particles has been interacted with
-          outVel += vec4(movement * 0.1, 0.0);
+        vec4 base = colliderBases[i];
+        vec4 tip = colliderTips[i];
+        vec3 height = tip.xyz - base.xyz;
+        vec3 relPos = pos.xyz - base.xyz;
+
+        float h = length(height);
+        vec3 up = normalize(height);
+
+        float dot_ = dot(up, relPos);
+
+        if (dot_ > 0.0  && dot_ < h) {
+          vec3 cross_ = cross(up, relPos);
+          float dist = length(cross_);
+          float t = tip.w;
+          float b = base.w;
+          float boundary = ((t - b) * dot_ / h) + b;
+          if (boundary > dist) {
+            vec3 movement = normalize(cross(cross_, up)) * boundary;
+            outPos += vec4(movement, 0.0);
+            outPos.w = 1.0; // Indicates particles has been interacted with
+            outVel += vec4(movement * 0.1, 0.0);
+            collided = 1;
+            break;
+          }
+          // add tangential velocity
+          float forceFieldDist = boundary * 2.0 - dist;
+          if (forceFieldDist > 0.0) {
+            vec3 tangent = normalize(cross_);
+            outVel.xyz += tangent * 0.0007;
+          }
         }
-        // Adding a tangential velocity looks quite pretty
-        float forceFieldDist = (colliders[i].w * 2.0 - dist);
-        if (forceFieldDist > 0.0) {
-          vec2 tangentToCollider = normalize(vec2(posToCollider.y, -posToCollider.x));
-          outVel.xy += tangentToCollider * 0.0007;
+      }
+
+      if (collided == 0) {
+        for (int i = 0; i < ${maxColliders}; ++i) {
+         vec4 tip = colliderTips[i];
+         vec3 posTip = pos.xyz - tip.xyz;
+         float distTip = length(posTip);
+         if (distTip < tip.w) {
+           vec3 movement = normalize(posTip) * tip.w;
+           outPos += vec4(movement, 0.0);
+           outPos.w = 1.0; // Indicates particles has been interacted with
+           outVel += vec4(movement * 0.1, 0.0);
+           break;
+         }
+         // add tangential velocity
+         float forceFieldDist = (tip.w * 2.0 - distTip);
+         if (forceFieldDist > 0.0) {
+           vec2 tangentToCollider = normalize(vec2(posTip.y, -posTip.x));
+           outVel.xy += tangentToCollider * 0.0007;
+         }
         }
       }
 
@@ -208,7 +248,8 @@ let SimulationShader = function (renderer, maxColliders) {
       gl.useProgram(program);
       gl.uniform1f(uniforms.time, timeValue);
       gl.uniform1f(uniforms.timeDelta, timeDelta);
-      gl.uniform4fv(uniforms.colliders, collidersValue);
+      gl.uniform4fv(uniforms.colliderBases, collidersValue.bases);
+      gl.uniform4fv(uniforms.colliderTips, collidersValue.tips);
     },
 
     setColliders: function ( colliders ) {

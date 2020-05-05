@@ -110,7 +110,7 @@
 
       var INT_MAX = 2147483647;
 
-      var maxColliders = 10;
+      var maxColliders = 40;
 
       var pickCoord = new THREE.Vector3(0.0, 0.0, 0.0);
       var pickRay = new THREE.Ray();
@@ -120,7 +120,13 @@
 
       var touchPoints = [];
 
-      var colliders = new Float32Array(maxColliders * 4);
+      var modulo = 0;
+
+      var colliders = {
+        bases: new Float32Array(maxColliders * 4),
+        tips: new Float32Array(maxColliders * 4),
+      };
+
       var colliderMeshes = [];
       var showColliders = false;
 
@@ -409,51 +415,51 @@
         return point;
       }
 
-      function pointToCollider(index, active, vector, size) {
+      function jointToCollider(index, base, tip) {
         var o = index * 4;
-
+        let active = true;
         if (index >= maxColliders)
           return;
-
-        if (active) {
-          colliders[o] =   (vector.x - mesh.position.x) / textScale;
-          colliders[o+1] = (vector.y - mesh.position.y) / textScale;
-          colliders[o+2] = (vector.z - mesh.position.z) / textScale;
+        if (!base.visible || !tip.visible) {
+          active = false;
         }
-        colliders[o+3] = active ? (size / textScale) : -1;
+        var vector = new THREE.Vector3();
 
-        // colliderMeshes[index].visible = active && showColliders;
-        // if (active) {
-        //   colliderMeshes[index].position.x = vector.x;
-        //   colliderMeshes[index].position.y = vector.y;
-        //   colliderMeshes[index].position.z = vector.z;
-        //   colliderMeshes[index].scale.set(size, size, size);
-        // }
+        vector.setFromMatrixPosition( base.matrixWorld );
+        colliders.bases[o] =   (vector.x - mesh.position.x) / textScale;
+        colliders.bases[o+1] = (vector.y - mesh.position.y) / textScale;
+        colliders.bases[o+2] = (vector.z - mesh.position.z) / textScale;
+        colliders.bases[o+3] = active ? (base.jointRadius / textScale) : -1;
+
+        vector.setFromMatrixPosition( tip.matrixWorld );
+        colliders.tips[o] =   (vector.x - mesh.position.x) / textScale;
+        colliders.tips[o+1] = (vector.y - mesh.position.y) / textScale;
+        colliders.tips[o+2] = (vector.z - mesh.position.z) / textScale;
+        colliders.tips[o+3] = active ? (tip.jointRadius / textScale) : -1;
+
       }
 
       function updateColliders() {
         var fi = 0;
+        modulo += 1;
 
-        while (mouseCoordQueue.length) {
-          pointToCollider(fi, true, mouseCoordQueue.shift(), 0.05);
-          fi++;
-        }
-
-        while (touchPoints.length) {
-          pointToCollider(fi, true, touchPoints.shift(), 0.05);
-          fi++;
-        }
 
         if (window.XRHand) {
-          const joints = [XRHand.THUMB_PHALANX_TIP, XRHand.INDEX_PHALANX_TIP, XRHand.MIDDLE_PHALANX_TIP, XRHand.RING_PHALANX_TIP, XRHand.LITTLE_PHALANX_TIP];
+          const orderedJoints = [
+             [XRHand.THUMB_METACARPAL, XRHand.THUMB_PHALANX_PROXIMAL, XRHand.THUMB_PHALANX_DISTAL, XRHand.THUMB_PHALANX_TIP],
+             [XRHand.INDEX_METACARPAL, XRHand.INDEX_PHALANX_PROXIMAL, XRHand.INDEX_PHALANX_INTERMEDIATE, XRHand.INDEX_PHALANX_DISTAL, XRHand.INDEX_PHALANX_TIP],
+             [XRHand.MIDDLE_METACARPAL, XRHand.MIDDLE_PHALANX_PROXIMAL, XRHand.MIDDLE_PHALANX_INTERMEDIATE, XRHand.MIDDLE_PHALANX_DISTAL, XRHand.MIDDLE_PHALANX_TIP],
+             [XRHand.RING_METACARPAL, XRHand.RING_PHALANX_PROXIMAL, XRHand.RING_PHALANX_INTERMEDIATE, XRHand.RING_PHALANX_DISTAL, XRHand.RING_PHALANX_TIP],
+             [XRHand.LITTLE_METACARPAL, XRHand.LITTLE_PHALANX_PROXIMAL, XRHand.LITTLE_PHALANX_INTERMEDIATE, XRHand.LITTLE_PHALANX_DISTAL, XRHand.LITTLE_PHALANX_TIP]
+          ];
           var vector = new THREE.Vector3();
-          for (let joint of joints) {
-            vector.setFromMatrixPosition( hand1[joint].matrixWorld );
-            pointToCollider(fi++, true, vector, hand1[joint].jointRadius);
-
-            vector.setFromMatrixPosition( hand2[joint].matrixWorld );
-            pointToCollider(fi++, true, vector, hand2[joint].jointRadius);
+          for (let finger of orderedJoints) {
+            for (let i = 1; i < finger.length - 1; i ++) {
+              jointToCollider(fi++, hand1[finger[i]], hand1[finger[i + 1]])
+              jointToCollider(fi++, hand2[finger[i]], hand2[finger[i + 1]])
+            }
           }
+          
         }
         /*var buttonPushed = false;
         var gamepads = navigator.getGamepads();
@@ -472,9 +478,6 @@
         }*/
 
         // Turn off any remaining colliders.
-        for (; fi < maxColliders; ++fi) {
-          pointToCollider(fi, false);
-        }
       }
 
       function transformFeedbackPass( gl, shader, source, target ) {
