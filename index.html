@@ -111,6 +111,7 @@
       var INT_MAX = 2147483647;
 
       var maxColliders = 40;
+      var velRandomScaling = 0.001;
 
       var pickCoord = new THREE.Vector3(0.0, 0.0, 0.0);
       var pickRay = new THREE.Ray();
@@ -309,9 +310,9 @@
 
             var velData = new Float32Array( particleCount * 4 );
             for ( var i = 0, l = velData.length; i < l; i += 4 ) {
-              velData[ i ] = 0; // (Math.random() - 0.5) * 0.004;
-              velData[ i + 1 ] = 0; //(Math.random() - 0.5) * 0.004;
-              velData[ i + 2 ] = 0; //(Math.random() - 0.5) * 0.004;
+              velData[ i ] = (Math.random() - 0.5) * velRandomScaling;
+              velData[ i + 1 ] = (Math.random() - 0.5) * velRandomScaling;
+              velData[ i + 2 ] = (Math.random() - 0.5) * velRandomScaling;
               velData[ i + 3 ] = 0.0;
             }
 
@@ -344,7 +345,7 @@
             gl.bindBuffer(gl.ARRAY_BUFFER, originBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
 
-            simulationShader = new SimulationShader(renderer, maxColliders);
+            simulationShader = new SimulationShader(renderer, maxColliders, velRandomScaling);
             simulationShader.setColliders(colliders);
 
             mesh = new THREE.Points(geometry, material);

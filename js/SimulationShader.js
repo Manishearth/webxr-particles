@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-let SimulationShader = function (renderer, maxColliders) {
+let SimulationShader = function (renderer, maxColliders, velRandomScaling) {
   let gl = renderer.getContext();
   if (!maxColliders) maxColliders = 8;
 
@@ -163,7 +163,10 @@ let SimulationShader = function (renderer, maxColliders) {
       if ( rand() > resetRate ) {
         outPosition = vec4(origin.xyz, 0.0);
         // This velocity reset should be in sync with the initialization values in index.html
-        outVelocity = vec4(0.0, 0.0, 0.0, 0.0);
+        outVelocity = vec4((rand()-0.5) * ${velRandomScaling},
+                           (rand()-0.5) * ${velRandomScaling},
+                           (rand()-0.5) * ${velRandomScaling},
+                           0.0);
       } else {
         runSimulation(position, velocity, outPosition, outVelocity);
       }
