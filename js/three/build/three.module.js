@@ -23254,10 +23254,12 @@ function WebXRManager( renderer, gl ) {
 
 			controller.hand.matrixAutoUpdate = false;
 			controller.hand.visible = false;
-			for (let i = 0; i <= XRHand.LITTLE_PHALANX_TIP; i++) {
-				controller.hand[i] = new Group();
-				controller.hand[i].matrixAutoUpdate = false;
-				controller.hand[i].visible = false;
+			if (window.XRHand) {
+				for (let i = 0; i <= XRHand.LITTLE_PHALANX_TIP; i++) {
+					controller.hand[i] = new Group();
+					controller.hand[i].matrixAutoUpdate = false;
+					controller.hand[i].visible = false;
+				}
 			}
 		}
 
@@ -23475,7 +23477,7 @@ function WebXRManager( renderer, gl ) {
 
 			if ( inputSource ) {
 
-				if (controller.hand && inputSource.hand) {
+				if (controller.hand && inputSource.hand && window.XRHand) {
 					for (let i = 0; i <= XRHand.LITTLE_PHALANX_TIP; i++) {
 						if (inputSource.hand[i]) {
 							let jointPose = frame.getJointPose(inputSource.hand[i], referenceSpace);
