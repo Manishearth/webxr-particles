@@ -22801,9 +22801,14 @@ function WebVRManager( renderer ) {
 	cameraR.viewport = new Vector4();
 	cameraR.layers.enable( 2 );
 
-	var cameraVR = new ArrayCamera( [ cameraL, cameraR ] );
+	var camera3 = new PerspectiveCamera();
+	camera3.viewport = new Vector4();
+	camera3.layers.enable( 3 );
+
+	var cameraVR = new ArrayCamera( [ cameraL, cameraR, camera3 ] );
 	cameraVR.layers.enable( 1 );
 	cameraVR.layers.enable( 2 );
+	cameraVR.layers.enable( 3 );
 
 	//
 
@@ -23211,10 +23216,16 @@ function WebXRManager( renderer, gl ) {
 	cameraR.layers.enable( 2 );
 	cameraR.viewport = new Vector4();
 
-	var cameraVR = new ArrayCamera( [ cameraL, cameraR ] );
+	var camera3 = new PerspectiveCamera();
+	camera3.viewport = new Vector4();
+	camera3.layers.enable( 3 );
+
+	var cameraVR = new ArrayCamera( [ cameraL, cameraR, camera3 ] );
 	cameraVR.layers.enable( 1 );
 	cameraVR.layers.enable( 2 );
+	cameraVR.layers.enable( 3 );
 
+	//
 	//
 
 	this.enabled = false;
@@ -23453,6 +23464,7 @@ function WebXRManager( renderer, gl ) {
 				var viewMatrix = view.transform.inverse.matrix;
 
 				var camera = cameraVR.cameras[ i ];
+                
 				camera.matrix.fromArray( viewMatrix ).getInverse( camera.matrix );
 				camera.projectionMatrix.fromArray( view.projectionMatrix );
 				camera.viewport.set( viewport.x, viewport.y, viewport.width, viewport.height );
